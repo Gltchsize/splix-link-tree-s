@@ -282,7 +282,7 @@ body.hide-pc #ePC{display:none}
   <div class="wrap">
 
     <div class="pc" id="ePC">
-      <img class="bn" id="dBanner" src="https://i.imgur.com/Avq5xsP.png" alt="">
+      <img class="bn" id="dBanner" src="https://i.imgur.com/BrVZWdv.gif" alt="">
       <div class="av-row">
         <div class="av-wrap">
           <div class="av"><img id="dAv" src="https://i.imgur.com/j5WwXDA.jpg" alt="LEER"></div>
@@ -1009,7 +1009,7 @@ document.addEventListener('mousemove',function(e){ptx=CFG.par?(e.clientX/innerWi
   function fromName(u){var c=u.display_name_styles&&u.display_name_styles.colors;if(c&&c.length){var x=toInt(c[0]);if(x!==null){var p=rgb2h(x>>16&255,x>>8&255,x&255);if(p[1]>.15)shiftTheme(p[0],p[1]*100)}}}
   function dominant(im){var c=document.createElement('canvas');c.width=c.height=48;var x=c.getContext('2d'),d;try{x.drawImage(im,0,0,48,48);d=x.getImageData(0,0,48,48).data}catch(e){return null}var w=new Array(24).fill(0),hs=new Array(24).fill(0),ss=new Array(24).fill(0),tot=0;for(var i=0;i<d.length;i+=4){if(d[i+3]<200)continue;var p=rgb2h(d[i],d[i+1],d[i+2]),v=p[1]*(1-Math.abs(2*p[2]-1));if(v<.08)continue;var b=Math.floor(p[0]/15)%24;w[b]+=v;hs[b]+=v*p[0];ss[b]+=v*p[1];tot+=v}var m=0;for(var k=1;k<24;k++)if(w[k]>w[m])m=k;if(tot<20||!w[m])return null;return [hs[m]/w[m],ss[m]/w[m]*100]}
   function pickTheme(cols,u){for(var i=0;i<cols.length;i++){var c=toInt(cols[i]);if(c===null)continue;var p=rgb2h(c>>16&255,c>>8&255,c&255);if(p[1]>.2&&p[2]>.08&&p[2]<.95)return shiftTheme(p[0],p[1]*100)}if(!u.avatar)return fromName(u);var im=new Image();im.crossOrigin='anonymous';im.onload=function(){var r=dominant(im);if(r)shiftTheme(r[0],r[1]);else fromName(u)};im.onerror=function(){fromName(u)};im.src=avUrl(u,64,false)}
-  function refresh(u){last.pf=Date.now();last.av=u.avatar;profile(u.id).then(function(p){var bn=DEF_BN,cols=[];if(p){if(p.banner)bn=CDN+'/banners/'+u.id+'/'+p.banner+(p.banner.indexOf('a_')===0?'.gif':'.png')+'?size=600';else if(p.bannerUrl)bn=p.bannerUrl;cols=p.colors||[]}swap($('dBanner'),bn,DEF_BN);pickTheme(cols,u)})}
+  function refresh(u){last.pf=Date.now();last.av=u.avatar;profile(u.id).then(function(p){var bn=DEF_BN,cols=[];if(p){if(p.banner)bn=CDN+'/banners/'+u.id+'/'+p.banner+(p.banner.indexOf('a_')===0?'.gif':'.png')+'?size=600';else if(p.bannerUrl)bn=p.bannerUrl;cols=p.colors||[]}swap($('dBanner'),DEF_BN,DEF_BN);pickTheme(cols,u)})}
   function icon(sp){var i=document.createElement('i');i.className=sp?'fa-brands fa-spotify':'fa-solid fa-gamepad';return i}
   function actImg(a,d){var im=a.assets&&a.assets.large_image;if(a.id&&a.id.indexOf('spotify:')===0){if(d.spotify&&d.spotify.album_art_url)return d.spotify.album_art_url;return (im&&im.indexOf('spotify:')===0)?'https://i.scdn.co/image/'+im.slice(8):null}if(!im)return null;if(im.indexOf('mp:')===0)return 'https://media.discordapp.net/'+im.slice(3);if(im.indexOf('spotify:')===0)return 'https://i.scdn.co/image/'+im.slice(8);return a.application_id?CDN+'/app-assets/'+a.application_id+'/'+im+'.png?size=128':null}
   function line(cls,txt){var e=document.createElement('span');e.className=cls;e.textContent=txt;return e}
