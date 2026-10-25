@@ -1,467 +1,418 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>splix - Link Tree</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Profil Discord</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Unbounded:wght@500;700;900&family=Grenze+Gotisch:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07060e;
+  --ink:#f4f2ff;
+  --muted:#a9a4c4;
+  --line:rgba(255,255,255,.1);
+  --glass:rgba(20,17,38,.55);
+  --st:#80848e;           /* couleur du statut, pilotée par le JS */
+  --st-a:rgba(128,132,142,.35);
+  --a1:#7c5cff; --a2:#ff4fa3; --a3:#22d3ee;
+  --display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--bg);color:var(--ink);font-family:var(--body);
+  display:grid;place-items:center;overflow-x:hidden;
+  padding:max(24px,env(safe-area-inset-top)) 16px max(24px,env(safe-area-inset-bottom));
+  min-height:100vh;
+}
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0c0c0c 0%, #1a002e 50%, #00001a 100%);
-            color: white;
-            overflow-x: hidden;
-            height: 100vh;
-            perspective: 1000px;
-            position: relative;
-        }
+/* ---------- fond aurore : la teinte suit le statut ---------- */
+.aurora{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.55;will-change:transform;transition:background 1.6s ease}
+.b1{width:56vmax;height:56vmax;left:-14vmax;top:-18vmax;background:var(--a1);animation:d1 26s ease-in-out infinite alternate}
+.b2{width:48vmax;height:48vmax;right:-16vmax;top:12vmax;background:var(--a2);animation:d2 32s ease-in-out infinite alternate}
+.b3{width:44vmax;height:44vmax;left:18vmax;bottom:-24vmax;background:var(--a3);animation:d3 29s ease-in-out infinite alternate}
+@keyframes d1{to{transform:translate(18vmax,10vmax) scale(1.15)}}
+@keyframes d2{to{transform:translate(-20vmax,-6vmax) scale(.9)}}
+@keyframes d3{to{transform:translate(-12vmax,-14vmax) scale(1.2)}}
+.grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.07;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>")}
+canvas#stars{position:fixed;inset:0;z-index:1;pointer-events:none}
 
-        /* Cosmic background */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background:
-                radial-gradient(circle at 20% 30%, rgba(108, 92, 231, 0.15) 0%, transparent 20%),
-                radial-gradient(circle at 80% 70%, rgba(92, 99, 235, 0.15) 0%, transparent 20%),
-                radial-gradient(circle at 40% 40%, rgba(134, 84, 235, 0.1) 0%, transparent 15%),
-                radial-gradient(circle at 60% 60%, rgba(147, 51, 234, 0.1) 0%, transparent 15%);
-            pointer-events: none;
-            z-index: -2;
-            animation: slowShift 20s ease-in-out infinite alternate;
-        }
+/* ---------- carte ---------- */
+.stage{position:relative;z-index:2;width:min(100%,460px);perspective:1100px}
+.card{
+  --mx:50%;--my:0%;
+  position:relative;border-radius:34px;padding:0 0 26px;
+  background:
+    radial-gradient(420px circle at var(--mx) var(--my),rgba(255,255,255,.09),transparent 60%),
+    var(--glass);
+  border:1px solid var(--line);
+  backdrop-filter:blur(26px) saturate(150%);-webkit-backdrop-filter:blur(26px) saturate(150%);
+  box-shadow:0 40px 90px -30px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.03) inset,0 0 80px -30px var(--st-a);
+  transform-style:preserve-3d;transition:transform .25s ease-out,box-shadow 1.2s ease;
+  animation:enter .9s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes enter{from{opacity:0;transform:translateY(26px) scale(.97);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
 
-        @keyframes slowShift {
-            0% { transform: translateY(0px) scale(1); }
-            100% { transform: translateY(-20px) scale(1.02); }
-        }
+/* ---------- avatar ---------- */
+.head{display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 26px;margin-top:-78px;position:relative}
+.avatar{position:relative;width:148px;height:148px;transform:translateZ(50px)}
+.ring{position:absolute;inset:-7px;border-radius:50%;
+  background:conic-gradient(from 0deg,var(--st),transparent 30%,var(--st) 55%,transparent 80%,var(--st));
+  animation:spin 7s linear infinite;filter:blur(.3px);transition:filter .6s}
+.ring::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--bg)}
+.glow{position:absolute;inset:-22px;border-radius:50%;background:var(--st);opacity:.28;filter:blur(30px);animation:breathe 4s ease-in-out infinite;transition:background 1s}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes breathe{50%{opacity:.5;transform:scale(1.08)}}
+.avatar img{position:absolute;inset:0;width:100%;height:100%;border-radius:50%;object-fit:cover;background:#1a1730;z-index:2}
+.dot{position:absolute;right:4px;bottom:4px;z-index:3;width:34px;height:34px;border-radius:50%;
+  background:var(--st);border:6px solid #120f22;transition:background .6s}
+.dot.online::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--st);animation:ping 2.4s ease-out infinite}
+@keyframes ping{from{opacity:.8;transform:scale(.9)}to{opacity:0;transform:scale(1.7)}}
 
-        /* Stars */
-        body::after {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image:
-                radial-gradient(white, rgba(255,255,255,0) 2px),
-                radial-gradient(white, rgba(255,255,255,0) 1px),
-                radial-gradient(white, rgba(255,255,255,0) 1px),
-                radial-gradient(white, rgba(255,255,255,0) 1px);
-            background-position: 10% 20%, 30% 40%, 70% 50%, 80% 60%;
-            background-repeat: no-repeat;
-            background-size: 150px 150px, 100px 100px, 80px 80px, 60px 60px;
-            animation: twinkle 4s ease-in-out infinite alternate;
-            pointer-events: none;
-            z-index: -1;
-            opacity: 0.8;
-        }
+h1{font-family:"Grenze Gotisch","UnifrakturCook",Georgia,serif;font-weight:800;letter-spacing:.01em;font-size:clamp(44px,12vw,58px);line-height:1;margin-top:22px;
+  background:linear-gradient(180deg,#f3e8ff 5%,#c084fc 50%,#7e22ce 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 16px rgba(168,85,247,.55));transform:translateZ(36px);overflow-wrap:anywhere}
+.handle{margin-top:8px;color:var(--muted);font-weight:500;font-size:15px}
+.statut-txt{margin-top:14px;display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--st);
+  padding:6px 13px;border-radius:99px;background:color-mix(in srgb,var(--st) 14%,transparent);border:1px solid color-mix(in srgb,var(--st) 35%,transparent);transition:all .6s}
+.statut-txt i{width:7px;height:7px;border-radius:50%;background:currentColor}
 
-        @keyframes twinkle {
-            0%, 100% { opacity: 0.8; }
-            50% { opacity: 1; }
-        }
+.badges{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:14px}
+.badge{font-size:12px;font-weight:600;padding:4px 10px;border-radius:99px;background:rgba(255,255,255,.06);border:1px solid var(--line);color:#d9d5f2}
 
-        /* Main container */
-        .container {
-            max-width: 400px;
-            margin: 0 auto;
-            padding: 2rem;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            z-index: 10;
-        }
+/* ---------- bannière, décoration, bio ---------- */
+.banner{position:relative;height:160px;border-radius:34px 34px 0 0;background:linear-gradient(135deg,var(--a1),var(--a2)) center/cover no-repeat}
+.banner::after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(180deg,rgba(10,8,20,0) 35%,rgba(10,8,20,.6))}
+.deco{position:absolute;left:-15px;top:-15px;width:calc(100% + 30px);height:calc(100% + 30px);z-index:4;pointer-events:none;object-fit:contain!important;background:none!important;border-radius:0!important}
+.avatar.has-deco .ring{display:none}
+.avatar.has-deco .dot{right:8px;bottom:8px}
+.badges img.bimg{width:26px;height:26px}
+.badge.tag{display:inline-flex;align-items:center;gap:6px}
+.badge.tag img{width:16px;height:16px}
+.pron{color:var(--muted)}
+.about{margin:20px 26px 0;text-align:center}
+.bio{font-size:14.5px;line-height:1.65;color:#e7e3fa;white-space:pre-wrap;overflow-wrap:anywhere}
+.since{margin-top:16px;font-size:12.5px;color:var(--muted)}
+.since strong{display:block;margin-top:3px;color:var(--ink);font-size:14px;font-weight:600}
 
-        /* 3D Profile Card */
-        .profile-card {
-            position: relative;
-            width: 200px;
-            height: 200px;
-            margin-bottom: 2rem;
-            transform-style: preserve-3d;
-            transition: transform 0.6s ease;
-            cursor: pointer;
-        }
+/* ---------- blocs ---------- */
+.stack{display:grid;gap:12px;margin:26px 26px 0}
+.panel{display:flex;gap:14px;align-items:center;padding:14px;border-radius:22px;background:rgba(255,255,255,.045);border:1px solid var(--line);
+  animation:pop .5s cubic-bezier(.2,.9,.3,1.2) both}
+@keyframes pop{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
+.panel .art{flex:none;width:64px;height:64px;border-radius:16px;object-fit:cover;background:linear-gradient(135deg,var(--a1),var(--a2));display:grid;place-items:center;font-size:26px;overflow:hidden}
+.panel .art img{width:100%;height:100%;object-fit:cover}
+.panel .txt{min-width:0;flex:1}
+.panel .kind{font-size:12px;color:var(--muted);font-weight:600}
+.panel .name{font-weight:700;font-size:15.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.panel .sub{font-size:13px;color:#cfcae8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.panel .time{font-size:12px;color:var(--muted);margin-top:6px;font-variant-numeric:tabular-nums}
+.panel.spotify{border-color:rgba(30,215,96,.28);background:linear-gradient(135deg,rgba(30,215,96,.1),rgba(255,255,255,.03))}
+.panel.spotify .kind{color:#4be58a}
+.bar{height:5px;border-radius:9px;background:rgba(255,255,255,.12);margin-top:9px;overflow:hidden}
+.bar b{display:block;height:100%;width:0;border-radius:9px;background:linear-gradient(90deg,#1ed760,#7bffb0);transition:width 1s linear}
+.eq{display:inline-flex;gap:2px;align-items:flex-end;height:11px;margin-left:8px;vertical-align:middle}
+.eq s{display:block;width:3px;background:#4be58a;border-radius:2px;animation:eq 1s ease-in-out infinite}
+.eq s:nth-child(2){animation-delay:-.4s}.eq s:nth-child(3){animation-delay:-.7s}
+@keyframes eq{0%,100%{height:3px}50%{height:11px}}
 
-        .profile-card:hover {
-            transform: rotateY(15deg) rotateX(10deg);
-        }
+.custom{display:flex;gap:10px;align-items:center;justify-content:center;padding:13px 16px;border-radius:20px;background:rgba(255,255,255,.05);border:1px solid var(--line);font-weight:500;font-size:14.5px;text-align:center}
+.custom img{width:22px;height:22px}
 
-        .profile-face {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            backface-visibility: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            font-weight: bold;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-            border: 3px solid transparent;
-            background: linear-gradient(45deg, #6c5ce7, #5c63eb, #8a2be2);
-        }
+.foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:22px 26px 0;padding-top:18px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+.live{display:inline-flex;align-items:center;gap:8px;font-weight:600}
+.live i{width:8px;height:8px;border-radius:50%;background:#555;transition:background .4s}
+.live.on i{background:#23a55a;box-shadow:0 0 0 0 rgba(35,165,90,.7);animation:pulse 2s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 9px rgba(35,165,90,0)}100%{box-shadow:0 0 0 0 rgba(35,165,90,0)}}
+button.copy{font:inherit;font-weight:600;color:var(--ink);background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:99px;padding:7px 14px;cursor:pointer;transition:background .2s,transform .15s}
+button.copy:hover{background:rgba(255,255,255,.14)}
+button.copy:active{transform:scale(.95)}
+button.copy:focus-visible{outline:2px solid var(--a3);outline-offset:2px}
 
-        .profile-face.front {
-            transform: translateZ(100px);
-            background-image: url('https://cdn.discordapp.com/avatars/1119856494213603348/875daadc1b164dd78780042c2e17d697.png?size=256');
-            background-size: cover;
-            background-position: center;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-        }
+.skeleton .avatar{background:rgba(255,255,255,.06);border-radius:50%}
+.skeleton h1{width:60%;height:40px;border-radius:12px;background:rgba(255,255,255,.07);-webkit-text-fill-color:transparent;animation:sh 1.4s ease-in-out infinite}
+@keyframes sh{50%{opacity:.4}}
+.error{text-align:center;color:var(--muted);font-size:14px;line-height:1.6;padding:6px 6px 0}
+.error strong{display:block;color:var(--ink);font-family:var(--display);font-size:18px;margin-bottom:8px}
 
-        .profile-face.back {
-            transform: rotateY(180deg) translateZ(100px);
-            background: rgba(108, 92, 231, 0.8);
-            backdrop-filter: blur(10px);
-            border: 3px solid rgba(255, 255, 255, 0.2);
-            display: flex;
-            flex-direction: column;
-            padding: 1rem;
-            text-align: center;
-            gap: 0.5rem;
-        }
-
-        .profile-face.back h3 {
-            margin: 0;
-            font-size: 1.2rem;
-        }
-
-        .profile-face.back p {
-            font-size: 0.9rem;
-            opacity: 0.9;
-        }
-
-        .status-indicator {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            width: 12px;
-            height: 12px;
-            background-color: #00ff88;
-            border-radius: 50%;
-            box-shadow: 0 0 10px rgba(0, 255, 136, 0.7);
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.3); opacity: 0.7; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        /* Links container */
-        .links-container {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        /* 3D Link Cards */
-        .link-card {
-            position: relative;
-            width: 100%;
-            padding: 1.5rem;
-            border-radius: 20px;
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            overflow: hidden;
-            transform-style: preserve-3d;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            position: relative;
-            z-index: 1;
-        }
-
-        .link-card:hover {
-            transform: translateZ(20px) scale(1.02);
-            box-shadow: 0 12px 48px rgba(108, 92, 231, 0.3);
-            background: rgba(255, 255, 255, 0.12);
-        }
-
-        .link-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(45deg, transparent, rgba(108, 92, 231, 0.1), transparent);
-            transform: translateX(-100%);
-            transition: transform 0.6s ease;
-        }
-
-        .link-card:hover::before {
-            transform: translateX(100%);
-        }
-
-        .link-icon {
-            width: 24px;
-            height: 24px;
-            margin-right: 10px;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-        }
-
-        .link-text {
-            flex: 1;
-            font-size: 1.1rem;
-            font-weight: 500;
-            text-decoration: none;
-            color: white;
-            display: flex;
-            align-items: center;
-            transition: all 0.3s ease;
-        }
-
-        .link-text:hover {
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-            letter-spacing: 0.5px;
-        }
-
-        /* Social media specific styles */
-        .discord-link { border-left: 4px solid #5865F2; }
-        .twitter-link { border-left: 4px solid #1DA1F2; }
-        .youtube-link { border-left: 4px solid #FF0000; }
-        .twitch-link { border-left: 4px solid #9146FF; }
-        .github-link { border-left: 4px solid #24292F; }
-        .spotify-link { border-left: 4px solid #1DB954; }
-
-        /* Footer */
-        .footer {
-            margin-top: auto;
-            text-align: center;
-            font-size: 0.9rem;
-            opacity: 0.7;
-            padding-top: 2rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        /* Responsive */
-        @media (max-width: 480px) {
-            .container {
-                padding: 1rem;
-            }
-
-            .profile-card {
-                width: 150px;
-                height: 150px;
-            }
-
-            .profile-face {
-                font-size: 1.2rem;
-            }
-
-            .link-card {
-                padding: 1rem;
-            }
-
-            .link-text {
-                font-size: 1rem;
-            }
-        }
-
-        /* Reduced motion preference */
-        @media (prefers-reduced-motion: reduce) {
-            * {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-            }
-        }
-    </style>
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important}
+  canvas#stars{display:none}
+}
+</style>
 </head>
 <body>
-    <div class="container">
-        <!-- 3D Profile Card -->
-        <div class="profile-card" id="profileCard">
-            <div class="profile-face front"></div>
-            <div class="profile-face back">
-                <h3>splix</h3>
-                <p>fnc_splix#0000</p>
-                <p>Online • Desktop</p>
-            </div>
-            <div class="status-indicator" title="Online on Discord"></div>
-        </div>
+<div class="aurora"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+<canvas id="stars"></canvas>
+<div class="grain"></div>
 
-        <!-- User Info -->
-        <div class="user-info">
-            <h1>splix</h1>
-            <p class="username">fnc_splix</p>
-            <p class="status">🟢 Online • Active on Discord Desktop</p>
-        </div>
-
-        <!-- Links Container -->
-        <div class="links-container">
-            <!-- Discord Link -->
-            <a href="https://discord.com/users/1119856494213603348" class="link-card discord-link" target="_blank">
-                <div class="link-text">
-                    <svg class="link-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M12 2v17" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    Discord
-                </div>
-            </a>
-
-            <!-- Twitter/X Link -->
-            <a href="https://twitter.com/fnc_splix" class="link-card twitter-link" target="_blank">
-                <div class="link-text">
-                    <svg class="link-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-1.28 2.56 4.48 4.48 0 0 0-4.48 4.48A4.48 4.48 0 0 1 2 8.71a5.63 5.63 0 0 0 1.41 3.78 5.64 5.64 0 0 1-2.55-.85v.05a4.47 4.47 0 0 0 3.58 4.4 4.47 4.47 0 0 1-2.02.08a4.47 4.47 0 0 0 4.17 3.08A9.89 9.89 0 0 1 0 17.54a10.89 10.89 0 0 0 11.56-2.94 10.89 10.89 0 0 1-5.82 1.93 10.92 10.92 0 0 0 10.75-6.9z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    Twitter/X
-                </div>
-            </a>
-
-            <!-- YouTube Link -->
-            <a href="https://youtube.com/@fnc_splix" class="link-card youtube-link" target="_blank">
-                <div class="link-text">
-                    <svg class="link-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M10 15L15 12L10 9V15ZM5.5 3A2.5 2.5 0 0 0 3 5.5V18.5A2.5 2.5 0 0 0 5.5 21H18.5A2.5 2.5 0 0 0 21 18.5V5.5A2.5 2.5 0 0 0 18.5 3H5.5Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    YouTube
-                </div>
-            </a>
-
-            <!-- Twitch Link -->
-            <a href="https://twitch.tv/fnc_splix" class="link-card twitch-link" target="_blank">
-                <div class="link-text">
-                    <svg class="link-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M21 2H3v16h5v4l4-4h5l4 4v-4h5V2zM5 7h5v2H5V7zm4 8H7v-2h2v2zm6 0h-2v-2h2v2z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    Twitch
-                </div>
-            </a>
-
-            <!-- GitHub Link -->
-            <a href="https://github.com/fnc_splix" class="link-card github-link" target="_blank">
-                <div class="link-text">
-                    <svg class="link-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    GitHub
-                </div>
-            </a>
-
-            <!-- Spotify Link -->
-            <a href="https://open.spotify.com/user/fnc_splix" class="link-card spotify-link" target="_blank">
-                <div class="link-text">
-                    <svg class="link-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M8 3v13.27a4 4 0 0 0 7.75 3.48V8a4 4 0 0 1 8 0v7.75a4 4 0 0 0 7.75 3.48V3a9 9 0 0 1-17 0z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    Spotify
-                </div>
-            </a>
-        </div>
-
-        <!-- Footer -->
-        <div class="footer">
-            <p>Made with ✨ for splix</p>
-            <p id="music-placeholder">🎵 Music will be added soon...</p>
-        </div>
+<main class="stage">
+  <section class="card skeleton" id="card" aria-live="polite">
+    <div class="banner"></div>
+    <div class="head">
+      <div class="avatar"><div class="ring"></div></div>
+      <h1>&nbsp;</h1>
     </div>
+  </section>
+</main>
 
-    <script>
-        // Add interactivity to the profile card
-        const profileCard = document.getElementById('profileCard');
+<script>
+const ID = "1119856494213603348";
+const API = "https://api.lanyard.rest/v1/users/" + ID;
 
-        // Tilt effect on mouse move
-        profileCard.addEventListener('mousemove', (e) => {
-            const rect = profileCard.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+/* Lanyard ne fournit ni bio, ni bannière, ni pronoms.
+   Le script essaie de les récupérer via un service tiers ; si ça échoue, ces valeurs servent de secours.
+   Pour une bannière fixe, colle l'URL d'une image dans "banner". */
+const FALLBACK = {
+  banner: "",
+  pronouns: "personne n'a d'énemi",
+  bio: "Tu n'as aucun ennemis. Ça n'existe pas, d'ailleurs personne n'a d'ennemis. Tu n'as le droit de blesser personne en ce monde--Thors"
+};
+let profile = null;
+async function loadProfile(){
+  try{
+    const r = await fetch("https://dcdn.dstn.to/profile/" + ID);
+    if(!r.ok) return;
+    profile = await r.json();
+    if(data && data.discord_user) render();
+  }catch(e){}
+}
+const STATUS = {
+  online:{c:"#23a55a",label:"En ligne",tint:["#7c5cff","#22d3ee","#23d18b"]},
+  idle:{c:"#f0b232",label:"Absent",tint:["#ff9f43","#ff4fa3","#7c5cff"]},
+  dnd:{c:"#f23f43",label:"Ne pas déranger",tint:["#ff3b5c","#ff7a45","#7c1fff"]},
+  offline:{c:"#80848e",label:"Hors ligne",tint:["#4b4f6b","#2c3050","#5a5f86"]}
+};
+const FLAGS = [[1,"Staff Discord"],[2,"Partenaire"],[4,"HypeSquad Events"],[8,"Bug Hunter"],[64,"Bravery"],[128,"Brilliance"],[256,"Balance"],[512,"Early Supporter"],[16384,"Bug Hunter Gold"],[131072,"Dev de bot vérifié"],[4194304,"Développeur actif"]];
 
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
+const $ = s => document.querySelector(s);
+const card = $("#card");
+let data = null, wsOpen = false;
 
-            const rotateX = ((y - centerY) / centerY) * 10;
-            const rotateY = ((centerX - x) / centerX) * 10;
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
-            profileCard.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1, 1, 1)`;
-        });
+function avatarUrl(u){
+  if(!u.avatar){ try{ return `https://cdn.discordapp.com/embed/avatars/${Number((BigInt(u.id)>>22n)%6n)}.png`; }catch(e){ return "https://cdn.discordapp.com/embed/avatars/0.png"; } }
+  return `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.${u.avatar.startsWith("a_")?"gif":"png"}?size=256`;
+}
+function assetUrl(act,key){
+  if(!key) return null;
+  if(key.startsWith("mp:external/")) return "https://media.discordapp.net/external/" + key.slice(12);
+  if(key.startsWith("mp:")) return "https://media.discordapp.net/" + key.slice(3);
+  if(key.startsWith("spotify:")) return "https://i.scdn.co/image/" + key.slice(8);
+  if(act.application_id) return `https://cdn.discordapp.com/app-assets/${act.application_id}/${key}.png`;
+  return null;
+}
+const fmt = ms => {
+  const s = Math.max(0, Math.floor(ms/1000)), h = Math.floor(s/3600), m = Math.floor(s%3600/60), r = s%60;
+  return (h? h+":"+String(m).padStart(2,"0") : m) + ":" + String(r).padStart(2,"0");
+};
 
-        // Reset tilt on mouse leave
-        profileCard.addEventListener('mouseleave', () => {
-            profileCard.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)';
-        });
+function render(){
+  const d = data, u = d.discord_user;
+  const st = STATUS[d.discord_status] || STATUS.offline;
+  const root = document.documentElement.style;
+  root.setProperty("--st", st.c);
+  root.setProperty("--st-a", st.c + "59");
+  root.setProperty("--a1", st.tint[0]); root.setProperty("--a2", st.tint[1]); root.setProperty("--a3", st.tint[2]);
 
-        // Click to flip card (alternative interaction)
-        profileCard.addEventListener('click', () => {
-            profileCard.classList.toggle('flipped');
-        });
+  const name = u.global_name || u.display_name || u.username;
+  const prof = (profile && profile.user_profile) || {};
+  const pu = (profile && profile.user) || {};
+  const bannerUrl = pu.banner
+    ? `https://cdn.discordapp.com/banners/${u.id}/${pu.banner}.${pu.banner.startsWith("a_")?"gif":"png"}?size=600`
+    : FALLBACK.banner;
+  const bio = prof.bio || FALLBACK.bio;
+  const pronouns = prof.pronouns || FALLBACK.pronouns;
+  const deco = u.avatar_decoration_data && u.avatar_decoration_data.asset;
+  const created = new Date(Number((BigInt(u.id) >> 22n) + 1420070400000n))
+    .toLocaleDateString("fr-FR", {day:"numeric", month:"long", year:"numeric"});
 
-        // Add some floating particles for extra 3D effect
-        function createParticles() {
-            const container = document.body;
-            const particleCount = 30;
+  let badges = "";
+  const pg = u.primary_guild;
+  if(pg && pg.tag && pg.identity_enabled !== false){
+    badges += `<span class="badge tag">${pg.badge ? `<img alt="" src="https://cdn.discordapp.com/clan-badges/${esc(pg.identity_guild_id)}/${esc(pg.badge)}.png?size=32">` : ""}${esc(pg.tag)}</span>`;
+  }
+  if(profile && profile.badges && profile.badges.length){
+    badges += profile.badges.map(b => `<img class="bimg" title="${esc(b.description)}" alt="${esc(b.description)}" src="https://cdn.discordapp.com/badge-icons/${esc(b.icon)}.png">`).join("");
+  }else{
+    badges += FLAGS.filter(([b]) => (u.public_flags||0) & b).map(([,l]) => `<span class="badge">${esc(l)}</span>`).join("");
+  }
 
-            for (let i = 0; i < particleCount; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
+  const acts = d.activities || [];
+  const custom = acts.find(a => a.type === 4);
+  let blocks = "";
 
-                const size = Math.random() * 3 + 1;
-                particle.style.width = `${size}px`;
-                particle.style.height = `${size}px`;
+  if(custom && (custom.state || custom.emoji)){
+    let em = "";
+    if(custom.emoji){
+      em = custom.emoji.id
+        ? `<img alt="" src="https://cdn.discordapp.com/emojis/${esc(custom.emoji.id)}.${custom.emoji.animated?"gif":"png"}?size=48">`
+        : `<span>${esc(custom.emoji.name)}</span>`;
+    }
+    blocks += `<div class="custom">${em}<span>${esc(custom.state||"")}</span></div>`;
+  }
 
-                particle.style.left = `${Math.random() * 100}%`;
-                particle.style.top = `${Math.random() * 100}%`;
+  if(d.listening_to_spotify && d.spotify){
+    const s = d.spotify;
+    blocks += `<div class="panel spotify">
+      <div class="art"><img alt="" src="${esc(s.album_art_url)}"></div>
+      <div class="txt">
+        <div class="kind">Écoute sur Spotify<span class="eq"><s></s><s></s><s></s></span></div>
+        <div class="name">${esc(s.song)}</div>
+        <div class="sub">${esc(s.artist).replace(/;/g,",")}</div>
+        <div class="bar"><b id="sp-bar"></b></div>
+        <div class="time"><span id="sp-now">0:00</span> / ${fmt(s.timestamps.end - s.timestamps.start)}</div>
+      </div></div>`;
+  }
 
-                particle.style.backgroundColor = `hsl(${Math.random() * 360}, 70%, 60%)`;
-                particle.style.boxShadow = `0 0 ${Math.random() * 5 + 2}px hsla(${Math.random() * 360}, 70%, 60%, 0.5)`;
+  acts.filter(a => a.type !== 4 && a.id !== "spotify:1" && a.name !== "Spotify").forEach(a => {
+    const kinds = {0:"Joue à",1:"En stream sur",2:"Écoute",3:"Regarde",5:"En compétition sur"};
+    const img = assetUrl(a, a.assets && a.assets.large_image);
+    blocks += `<div class="panel">
+      <div class="art">${img ? `<img alt="" src="${esc(img)}" onerror="this.remove()">` : "🎮"}</div>
+      <div class="txt">
+        <div class="kind">${kinds[a.type]||"Activité"}</div>
+        <div class="name">${esc(a.name)}</div>
+        ${a.details ? `<div class="sub">${esc(a.details)}</div>` : ""}
+        ${a.state ? `<div class="sub">${esc(a.state)}</div>` : ""}
+        ${a.timestamps && a.timestamps.start ? `<div class="time" data-start="${a.timestamps.start}"></div>` : ""}
+      </div></div>`;
+  });
 
-                const duration = Math.random() * 15 + 10;
-                particle.style.animationDuration = `${duration}s`;
-                particle.style.animationDelay = `${Math.random() * 5}s`;
+  card.classList.remove("skeleton");
+  card.innerHTML = `
+    <div class="banner"${bannerUrl ? ` style="background-image:url('${esc(bannerUrl)}')"` : ""}></div>
+    <div class="head">
+      <div class="avatar${deco ? " has-deco" : ""}">
+        <div class="glow"></div><div class="ring"></div>
+        <img alt="Avatar de ${esc(name)}" src="${avatarUrl(u)}">
+        ${deco ? `<img class="deco" alt="" src="https://cdn.discordapp.com/avatar-decoration-presets/${esc(deco)}.png?size=240&passthrough=true">` : ""}
+        <span class="dot ${d.discord_status==="online"?"online":""}"></span>
+      </div>
+      <h1>${esc(name)}</h1>
+      <p class="handle">${esc(u.username)}${pronouns ? ` <span class="pron">• ${esc(pronouns)}</span>` : ""}</p>
+      <span class="statut-txt"><i></i>${st.label}</span>
+      ${badges ? `<div class="badges">${badges}</div>` : ""}
+    </div>
+    <div class="about">
+      ${bio ? `<p class="bio">${esc(bio)}</p>` : ""}
+      <p class="since">Membre depuis<strong>${esc(created)}</strong></p>
+    </div>
+    ${blocks ? `<div class="stack">${blocks}</div>` : ""}
+    <div class="foot">
+      <span class="live ${wsOpen?"on":""}" id="live"><i></i><span id="live-t">${wsOpen?"En direct":"Mise à jour auto"}</span></span>
+      <button class="copy" id="copy" type="button">Copier le pseudo</button>
+    </div>`;
 
-                container.appendChild(particle);
-            }
-        }
+  $("#copy").onclick = async e => {
+    const b = e.currentTarget;
+    try{ await navigator.clipboard.writeText(u.username); b.textContent = "Copié"; }
+    catch(_){ b.textContent = "Copie impossible"; }
+    setTimeout(()=> b.textContent = "Copier le pseudo", 1600);
+  };
+  tick();
+}
 
-        // Add particle styles
-        const style = document.createElement('style');
-        style.textContent = `
-            .particle {
-                position: fixed;
-                border-radius: 50%;
-                pointer-events: none;
-                z-index: -1;
-                animation: float linear infinite;
-            }
+function tick(){
+  if(!data) return;
+  const now = Date.now();
+  document.querySelectorAll("[data-start]").forEach(el => el.textContent = "Depuis " + fmt(now - Number(el.dataset.start)));
+  if(data.listening_to_spotify && data.spotify){
+    const {start,end} = data.spotify.timestamps, total = end - start;
+    const pos = Math.min(Math.max(now - start, 0), total);
+    const bar = $("#sp-bar"), t = $("#sp-now");
+    if(bar) bar.style.width = (pos/total*100) + "%";
+    if(t) t.textContent = fmt(pos);
+  }
+}
+setInterval(tick, 1000);
 
-            @keyframes float {
-                0% {
-                    transform: translateY(0) translateX(0);
-                    opacity: 0;
-                }
-                50% {
-                    opacity: 0.6;
-                }
-                100% {
-                    transform: translateY(-100vh) translateX(-100px);
-                    opacity: 0;
-                }
-            }
-        `;
-        document.head.appendChild(style);
+function setLive(on){
+  wsOpen = on;
+  const l = $("#live"), t = $("#live-t");
+  if(l){ l.classList.toggle("on", on); t.textContent = on ? "En direct" : "Mise à jour auto"; }
+}
 
-        // Initialize particles
-        createParticles();
-    </script>
+function showError(msg){
+  card.classList.remove("skeleton");
+  card.innerHTML = `<div class="error"><strong>Profil introuvable</strong>${esc(msg)}</div>`;
+}
+
+/* ---------- données : REST pour le premier affichage, WebSocket pour le temps réel ---------- */
+async function load(){
+  try{
+    const r = await fetch(API, {cache:"no-store"});
+    const j = await r.json();
+    if(j.success){ data = j.data; render(); }
+    else if(!data) showError("Ce compte n'est pas suivi par Lanyard. Il faut d'abord rejoindre le serveur Discord de Lanyard avec ce compte, puis recharger la page.");
+  }catch(e){ if(!data) showError("Impossible de joindre l'API. Vérifie ta connexion puis recharge la page."); }
+}
+
+function connect(){
+  let hb;
+  let ws;
+  try{ ws = new WebSocket("wss://api.lanyard.rest/socket"); }catch(e){ return; }
+  ws.onmessage = ev => {
+    const m = JSON.parse(ev.data);
+    if(m.op === 1){
+      ws.send(JSON.stringify({op:2,d:{subscribe_to_id:ID}}));
+      hb = setInterval(()=> ws.readyState===1 && ws.send(JSON.stringify({op:3})), m.d.heartbeat_interval);
+    }else if(m.op === 0 && (m.t === "INIT_STATE" || m.t === "PRESENCE_UPDATE")){
+      data = Object.assign({}, data || {}, m.d);
+      if(data.discord_user){ setLive(true); render(); }
+    }
+  };
+  ws.onclose = () => { clearInterval(hb); setLive(false); setTimeout(connect, 3000); };
+  ws.onerror = () => ws.close();
+}
+load(); connect(); loadProfile();
+setInterval(() => { if(!wsOpen) load(); }, 15000);
+
+/* ---------- inclinaison 3D + lumière qui suit le curseur ---------- */
+const stage = document.querySelector(".stage");
+const fine = matchMedia("(hover:hover) and (pointer:fine)").matches;
+if(fine){
+  stage.addEventListener("pointermove", e => {
+    const r = card.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+    card.style.transform = `rotateY(${(x-.5)*10}deg) rotateX(${(.5-y)*10}deg)`;
+    card.style.setProperty("--mx", (x*100)+"%"); card.style.setProperty("--my", (y*100)+"%");
+  });
+  stage.addEventListener("pointerleave", () => card.style.transform = "");
+}
+
+/* ---------- étoiles ---------- */
+(function(){
+  const cv = document.getElementById("stars"), ctx = cv.getContext("2d");
+  let W, H, pts = [], mx = 0, my = 0;
+  function size(){
+    const dpr = Math.min(devicePixelRatio||1, 2);
+    W = cv.width = innerWidth*dpr; H = cv.height = innerHeight*dpr;
+    cv.style.width = innerWidth+"px"; cv.style.height = innerHeight+"px";
+    const n = Math.round(innerWidth*innerHeight/14000);
+    pts = Array.from({length:n}, () => ({x:Math.random()*W,y:Math.random()*H,r:(Math.random()*1.3+.3)*dpr,z:Math.random()*.8+.2,p:Math.random()*6.28}));
+  }
+  addEventListener("resize", size); size();
+  addEventListener("pointermove", e => { mx = (e.clientX/innerWidth-.5); my = (e.clientY/innerHeight-.5); });
+  (function loop(t){
+    ctx.clearRect(0,0,W,H);
+    for(const p of pts){
+      const a = .25 + .55*Math.abs(Math.sin(t/1800 + p.p));
+      ctx.globalAlpha = a*p.z;
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      ctx.arc((p.x - mx*40*p.z*(devicePixelRatio||1) + W)%W, (p.y - my*40*p.z*(devicePixelRatio||1) + H)%H, p.r, 0, 6.283);
+      ctx.fill();
+    }
+    requestAnimationFrame(loop);
+  })(0);
+})();
+</script>
 </body>
 </html>
