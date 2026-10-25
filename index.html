@@ -140,6 +140,64 @@ button.copy:focus-visible{outline:2px solid var(--a3);outline-offset:2px}
 .error{text-align:center;color:var(--muted);font-size:14px;line-height:1.6;padding:6px 6px 0}
 .error strong{display:block;color:var(--ink);font-family:var(--display);font-size:18px;margin-bottom:8px}
 
+/* ---------- texte géant en fond ---------- */
+.bgtext{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;display:flex;flex-direction:column;justify-content:space-around;
+  font-family:"Grenze Gotisch",Georgia,serif;font-weight:800;font-size:clamp(110px,19vw,280px);line-height:1;white-space:nowrap;
+  -webkit-mask:linear-gradient(90deg,transparent,#000 18%,#000 82%,transparent);mask:linear-gradient(90deg,transparent,#000 18%,#000 82%,transparent)}
+.bgtext .row{display:flex;width:max-content;color:transparent;-webkit-text-stroke:1.2px rgba(255,255,255,.1);animation:slide 80s linear infinite}
+.bgtext .row.r{animation-direction:reverse;animation-duration:100s}
+@keyframes slide{to{transform:translateX(-50%)}}
+
+/* ---------- panneaux : ancienneté + appareils ---------- */
+.rail{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.pan{padding:18px;border-radius:24px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
+  box-shadow:0 30px 60px -30px rgba(0,0,0,.7);animation:enter .9s .6s cubic-bezier(.2,.8,.2,1) backwards}
+.pan h2{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:12px}
+.age b{font-family:var(--display);font-size:clamp(30px,8vw,44px);font-weight:900;letter-spacing:-.03em;font-variant-numeric:tabular-nums;
+  background:linear-gradient(180deg,#fff,var(--st));-webkit-background-clip:text;background-clip:text;color:transparent}
+.age span{margin-left:8px;color:var(--muted);font-weight:600;font-size:14px}
+.hms{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:8px;color:var(--muted);font-size:13px}
+.hms b{font-family:var(--display);color:var(--ink);font-size:17px;margin-right:3px;font-variant-numeric:tabular-nums}
+.note{margin-top:12px;font-size:12.5px;color:var(--muted)}
+.dev{list-style:none;display:grid;gap:9px;font-size:14px;font-weight:600}
+.dev li{display:flex;align-items:center;gap:10px;color:#6f6b88;transition:color .4s}
+.dev li i{width:9px;height:9px;border-radius:50%;background:#3b3856;transition:all .4s}
+.dev li.on{color:var(--ink)}
+.dev li.on i{background:var(--st);box-shadow:0 0 12px var(--st)}
+.pulse{display:block;width:100%;height:44px;margin-top:14px;overflow:visible}
+.pulse path{fill:none;stroke:var(--st);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;transition:stroke .6s}
+.pulse .base-p{opacity:.18}
+.pulse .live-p{stroke-dasharray:35 65;filter:drop-shadow(0 0 5px var(--st));animation:run var(--spd,2.2s) linear infinite}
+.pulse .flat-p{opacity:.45}
+@keyframes run{from{stroke-dashoffset:100}to{stroke-dashoffset:0}}
+.pan.off .live-p,.pan:not(.off) .flat-p{display:none}
+@media (min-width:1120px){
+  .rail{display:contents}
+  .pan{position:absolute;top:96px;width:250px;transition:transform .5s cubic-bezier(.2,.8,.2,1)}
+  .pl{right:calc(100% + 34px);transform:perspective(900px) rotateY(14deg)}
+  .pr{left:calc(100% + 34px);transform:perspective(900px) rotateY(-14deg)}
+  .pl:hover,.pr:hover{transform:perspective(900px) rotateY(0)}
+}
+
+/* ---------- lecteur de musique ---------- */
+body{padding-bottom:calc(env(safe-area-inset-bottom) + 92px)}
+#yt{position:fixed;left:-9999px;bottom:0;width:200px;height:200px;opacity:0;pointer-events:none}
+.music{position:fixed;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:20;display:flex;align-items:center;gap:12px;
+  padding:8px 12px 8px 8px;border-radius:99px;width:max-content;max-width:min(92vw,400px);background:rgba(20,17,38,.72);border:1px solid var(--line);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 20px 50px -20px rgba(0,0,0,.8);animation:enter .9s 1s cubic-bezier(.2,.8,.2,1) backwards}
+.music button{flex:none;display:grid;place-items:center;width:40px;height:40px;border:0;border-radius:50%;cursor:pointer;color:#fff;
+  background:linear-gradient(135deg,var(--a1),var(--a2));transition:transform .15s,opacity .3s}
+.music button:hover{transform:scale(1.08)}.music button:active{transform:scale(.94)}
+.music button:disabled{opacity:.4;cursor:default;transform:none}
+.music button:focus-visible{outline:2px solid var(--a3);outline-offset:2px}
+.music button.sm{width:32px;height:32px;background:rgba(255,255,255,.08)}
+.music svg{width:18px;height:18px;fill:currentColor}
+.music .mt{min-width:0;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.music .eq{margin:0}.music .eq s{background:var(--st)}
+.music:not(.on) .eq s{animation-play-state:paused;height:3px}
+.music .ic-pause,.music.on .ic-play{display:none}.music.on .ic-pause{display:block}
+#toast{bottom:max(84px,calc(env(safe-area-inset-bottom) + 72px))}
+
 /* ---------- 3D, bord lumineux, intro ---------- */
 canvas#gl{position:fixed;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
 canvas#fx{position:fixed;inset:0;z-index:50;pointer-events:none}
@@ -172,10 +230,23 @@ body.rainbow .aurora,body.rainbow canvas#gl{animation:hue 2.5s linear infinite}
 </head>
 <body>
 <div class="aurora"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+<div class="bgtext" aria-hidden="true"><div class="row" id="bg1"></div><div class="row r" id="bg2"></div></div>
 <canvas id="gl"></canvas>
 <canvas id="stars"></canvas>
 <canvas id="fx"></canvas>
 <div id="toast" role="status"></div>
+<div id="yt"></div>
+<div class="music" id="music">
+  <button id="mp" type="button" aria-label="Lecture / pause" disabled>
+    <svg class="ic-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    <svg class="ic-pause" viewBox="0 0 24 24"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
+  </button>
+  <span class="mt" id="mtitle">Musique</span>
+  <span class="eq"><s></s><s></s><s></s></span>
+  <button class="sm" id="mn" type="button" aria-label="Piste suivante" disabled>
+    <svg viewBox="0 0 24 24"><path d="M6 6l9 6-9 6zm10 0h2v12h-2z"/></svg>
+  </button>
+</div>
 <div class="grain"></div>
 
 <main class="stage">
@@ -186,6 +257,24 @@ body.rainbow .aurora,body.rainbow canvas#gl{animation:hue 2.5s linear infinite}
       <h1>&nbsp;</h1>
     </div>
   </section>
+  <div class="rail">
+    <aside class="pan pl" aria-label="Ancienneté du compte">
+      <h2>Ce compte existe depuis</h2>
+      <div class="age"><b id="a-d">0</b><span>jours</span></div>
+      <div class="hms"><span><b id="a-h">00</b>h</span><span><b id="a-m">00</b>min</span><span><b id="a-s">00</b>s</span></div>
+      <p class="note" id="a-since"></p>
+    </aside>
+    <aside class="pan pr off" id="pulse" aria-label="Appareils">
+      <h2>Connecté sur</h2>
+      <ul class="dev"><li id="dv-desktop"><i></i>Ordinateur</li><li id="dv-mobile"><i></i>Mobile</li><li id="dv-web"><i></i>Navigateur</li></ul>
+      <svg class="pulse" viewBox="0 0 240 44" preserveAspectRatio="none" aria-hidden="true">
+        <path class="base-p" d="M0 22H70l8-2 8 2 8-14 10 30 8-16 6 0H240"/>
+        <path class="live-p" pathLength="100" d="M0 22H70l8-2 8 2 8-14 10 30 8-16 6 0H240"/>
+        <path class="flat-p" d="M0 22H240"/>
+      </svg>
+      <p class="note" id="pulse-t">Hors ligne</p>
+    </aside>
+  </div>
 </main>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -249,8 +338,10 @@ function render(){
   root.setProperty("--st-a", st.c + "59");
   root.setProperty("--a1", st.tint[0]); root.setProperty("--a2", st.tint[1]); root.setProperty("--a3", st.tint[2]);
   if(window.glTarget) glTarget.set(st.c);
+  updateRail(d, st);
 
   const name = u.global_name || u.display_name || u.username;
+  setBg(name);
   const prof = (profile && profile.user_profile) || {};
   const pu = (profile && profile.user) || {};
   const bannerUrl = pu.banner
@@ -478,6 +569,53 @@ if(fine){
     r.render(sc, cam); requestAnimationFrame(loop);
   })();
 })();
+
+/* ---------- panneaux : ancienneté, appareils, texte de fond ---------- */
+const born = Number((BigInt(ID) >> 22n) + 1420070400000n);
+$("#a-since").textContent = "Depuis le " + new Date(born).toLocaleDateString("fr-FR", {day:"numeric", month:"long", year:"numeric"});
+function ageTick(){
+  const s = Math.floor((Date.now() - born) / 1000), p = n => String(n).padStart(2, "0");
+  $("#a-d").textContent = Math.floor(s / 86400).toLocaleString("fr-FR");
+  $("#a-h").textContent = p(Math.floor(s % 86400 / 3600));
+  $("#a-m").textContent = p(Math.floor(s % 3600 / 60));
+  $("#a-s").textContent = p(s % 60);
+}
+ageTick(); setInterval(ageTick, 1000);
+
+function updateRail(d, st){
+  [["desktop","active_on_discord_desktop"],["mobile","active_on_discord_mobile"],["web","active_on_discord_web"]]
+    .forEach(([k, f]) => $("#dv-" + k).classList.toggle("on", !!d[f]));
+  $("#pulse").classList.toggle("off", d.discord_status === "offline");
+  document.documentElement.style.setProperty("--spd", ({online:"2.2s", idle:"4.5s", dnd:"1.2s"})[d.discord_status] || "2.2s");
+  $("#pulse-t").textContent = st.label;
+}
+function setBg(n){
+  if(setBg.n === n) return; setBg.n = n;
+  const t = esc((n + " ✦ ").repeat(6));
+  ["#bg1", "#bg2"].forEach(id => $(id).innerHTML = `<span>${t}</span><span>${t}</span>`);
+}
+
+/* ---------- musique : playlist YouTube ---------- */
+const PLAYLIST = "PLPMWvmH_Lej8";   // ID de la playlist (la partie après list=)
+let yt;
+window.onYouTubeIframeAPIReady = () => {
+  yt = new YT.Player("yt", {
+    width: "200", height: "200",
+    playerVars: {listType:"playlist", list:PLAYLIST, playsinline:1, controls:0, rel:0},
+    events: {
+      onReady: () => { yt.setLoopPlaylist(true); $("#mp").disabled = false; $("#mn").disabled = false; },
+      onStateChange: e => {
+        const on = e.data === 1;
+        $("#music").classList.toggle("on", on);
+        if(on || e.data === 2){ const t = yt.getVideoData().title; if(t) $("#mtitle").textContent = t; }
+      },
+      onError: () => { $("#mtitle").textContent = "Playlist indisponible"; $("#mp").disabled = true; $("#mn").disabled = true; }
+    }
+  });
+};
+$("#mp").onclick = () => yt && (yt.getPlayerState() === 1 ? yt.pauseVideo() : yt.playVideo());
+$("#mn").onclick = () => yt && yt.nextVideo();
+const ytTag = document.createElement("script"); ytTag.src = "https://www.youtube.com/iframe_api"; document.head.appendChild(ytTag);
 
 /* ---------- effets + secrets ---------- */
 (function(){
