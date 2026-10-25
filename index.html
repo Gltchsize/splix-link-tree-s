@@ -75,7 +75,7 @@ canvas#stars{position:fixed;inset:0;z-index:1;pointer-events:none}
 @keyframes ping{from{opacity:.8;transform:scale(.9)}to{opacity:0;transform:scale(1.7)}}
 
 h1{font-family:"Grenze Gotisch","UnifrakturCook",Georgia,serif;font-weight:800;letter-spacing:.01em;font-size:clamp(44px,12vw,58px);line-height:1;margin-top:22px;
-  background:linear-gradient(180deg,#f3e8ff 5%,#c084fc 50%,#7e22ce 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+  background:linear-gradient(100deg,transparent 42%,rgba(255,255,255,.9) 50%,transparent 58%) 200% 0/250% 100% no-repeat,linear-gradient(180deg,#f3e8ff 5%,#c084fc 50%,#7e22ce 100%);-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 7s ease-in-out 2.5s infinite;
   filter:drop-shadow(0 0 16px rgba(168,85,247,.55));transform:translateZ(36px);overflow-wrap:anywhere}
 .handle{margin-top:8px;color:var(--muted);font-weight:500;font-size:15px}
 .statut-txt{margin-top:14px;display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--st);
@@ -140,6 +140,30 @@ button.copy:focus-visible{outline:2px solid var(--a3);outline-offset:2px}
 .error{text-align:center;color:var(--muted);font-size:14px;line-height:1.6;padding:6px 6px 0}
 .error strong{display:block;color:var(--ink);font-family:var(--display);font-size:18px;margin-bottom:8px}
 
+/* ---------- 3D, bord lumineux, intro ---------- */
+canvas#gl{position:fixed;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
+canvas#fx{position:fixed;inset:0;z-index:50;pointer-events:none}
+@property --ang{syntax:"<angle>";inherits:false;initial-value:0deg}
+.card::before{content:"";position:absolute;inset:-1px;border-radius:35px;padding:1.5px;pointer-events:none;z-index:5;
+  background:conic-gradient(from var(--ang),transparent 0 68%,var(--st) 84%,#fff 92%,transparent);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;
+  animation:edge 6s linear infinite}
+@keyframes edge{to{--ang:360deg}}
+@keyframes shine{0%{background-position:200% 0,0 0}35%,100%{background-position:-100% 0,0 0}}
+.intro .head>*,.intro .about,.intro .stack,.intro .foot{animation:rise .9s cubic-bezier(.2,.8,.2,1) both}
+.intro .head>:nth-child(2){animation-delay:.12s}.intro .head>:nth-child(3){animation-delay:.2s}
+.intro .head>:nth-child(4){animation-delay:.28s}.intro .head>:nth-child(5){animation-delay:.36s}
+.intro .about{animation-delay:.5s}.intro .stack{animation-delay:.6s}.intro .foot{animation-delay:.7s}
+@keyframes rise{from{opacity:0;transform:translateY(18px) scale(.96);filter:blur(8px)}to{opacity:1;transform:none;filter:none}}
+.avatar.flip{animation:flip 1.3s cubic-bezier(.3,.7,.2,1)}
+@keyframes flip{from{transform:translateZ(50px) rotateY(0)}to{transform:translateZ(50px) rotateY(720deg)}}
+body.rainbow .aurora,body.rainbow canvas#gl{animation:hue 2.5s linear infinite}
+@keyframes hue{to{filter:hue-rotate(360deg)}}
+#toast{position:fixed;left:50%;bottom:max(28px,env(safe-area-inset-bottom));transform:translate(-50%,30px);opacity:0;z-index:60;padding:12px 20px;border-radius:99px;
+  background:rgba(20,17,38,.82);border:1px solid var(--line);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);font-weight:600;font-size:14px;
+  transition:all .6s cubic-bezier(.2,.8,.2,1);pointer-events:none;max-width:90vw;text-align:center}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important}
   canvas#stars{display:none}
@@ -148,7 +172,10 @@ button.copy:focus-visible{outline:2px solid var(--a3);outline-offset:2px}
 </head>
 <body>
 <div class="aurora"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+<canvas id="gl"></canvas>
 <canvas id="stars"></canvas>
+<canvas id="fx"></canvas>
+<div id="toast" role="status"></div>
 <div class="grain"></div>
 
 <main class="stage">
@@ -161,6 +188,7 @@ button.copy:focus-visible{outline:2px solid var(--a3);outline-offset:2px}
   </section>
 </main>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 const ID = "1119856494213603348";
 const API = "https://api.lanyard.rest/v1/users/" + ID;
@@ -220,6 +248,7 @@ function render(){
   root.setProperty("--st", st.c);
   root.setProperty("--st-a", st.c + "59");
   root.setProperty("--a1", st.tint[0]); root.setProperty("--a2", st.tint[1]); root.setProperty("--a3", st.tint[2]);
+  if(window.glTarget) glTarget.set(st.c);
 
   const name = u.global_name || u.display_name || u.username;
   const prof = (profile && profile.user_profile) || {};
@@ -286,6 +315,7 @@ function render(){
   });
 
   card.classList.remove("skeleton");
+  if(!window.__intro){ window.__intro = 1; card.classList.add("intro"); setTimeout(() => card.classList.remove("intro"), 2400); }
   card.innerHTML = `
     <div class="banner"${bannerUrl ? ` style="background-image:url('${esc(bannerUrl)}')"` : ""}></div>
     <div class="head">
@@ -412,6 +442,101 @@ if(fine){
     }
     requestAnimationFrame(loop);
   })(0);
+})();
+
+/* ---------- scène 3D : cristal, anneaux et poussière d'étoiles teintés par le statut ---------- */
+(function(){
+  if(!window.THREE || matchMedia("(prefers-reduced-motion:reduce)").matches) return;
+  const T = THREE, cv = document.getElementById("gl");
+  let r; try{ r = new T.WebGLRenderer({canvas:cv, alpha:true, antialias:true}); }catch(e){ return; }
+  r.setPixelRatio(Math.min(devicePixelRatio, 2));
+  const sc = new T.Scene(), cam = new T.PerspectiveCamera(50, 1, .1, 100); cam.position.z = 9;
+  const col = new T.Color("#80848e"); window.glTarget = new T.Color("#80848e");
+  const mat = (o, w) => new T.MeshBasicMaterial({color:col, wireframe:!!w, transparent:true, opacity:o});
+  const group = new T.Group(); sc.add(group);
+  group.add(new T.Mesh(new T.IcosahedronGeometry(3.6,1), mat(.2,1)), new T.Mesh(new T.IcosahedronGeometry(2.2,0), mat(.4,1)));
+  const rings = [0,1,2].map(i => { const m = new T.Mesh(new T.TorusGeometry(4.7+i*.8,.012,8,180), mat(.35)); m.rotation.set(i*1.1, i*.7, 0); group.add(m); return m; });
+  const N = 700, pos = new Float32Array(N*3);
+  for(let i=0;i<N;i++){ const R = 5+Math.random()*10, a = Math.random()*6.283, b = Math.acos(2*Math.random()-1);
+    pos.set([R*Math.sin(b)*Math.cos(a), R*Math.sin(b)*Math.sin(a), R*Math.cos(b)], i*3); }
+  const g = new T.BufferGeometry(); g.setAttribute("position", new T.BufferAttribute(pos,3));
+  const pts = new T.Points(g, new T.PointsMaterial({color:col, size:.05, transparent:true, opacity:.8})); sc.add(pts);
+  let mx = 0, my = 0, boost = 0;
+  addEventListener("pointermove", e => { mx = e.clientX/innerWidth-.5; my = e.clientY/innerHeight-.5; });
+  const size = () => { r.setSize(innerWidth, innerHeight, false); cam.aspect = innerWidth/innerHeight; cam.updateProjectionMatrix(); };
+  addEventListener("resize", size); size();
+  window.glBoost = () => { boost = 1; };
+  const clk = new T.Clock();
+  (function loop(){
+    const t = clk.getElapsedTime(), s = 1 + boost*10;
+    col.lerp(glTarget, .03); boost *= .965;
+    group.rotation.y += .0025*s; group.rotation.x += .0012*s;
+    group.position.x += (mx*1.6 - group.position.x)*.05; group.position.y += (-my*1.1 - group.position.y)*.05;
+    group.scale.setScalar(1 + Math.sin(t*1.2)*.02 + boost*.3);
+    rings.forEach((m,i) => { m.rotation.z += .004*(i+1)*s; m.rotation.x += .002*s; });
+    pts.rotation.y = t*.02 + mx*.25; pts.rotation.x = my*.15;
+    r.render(sc, cam); requestAnimationFrame(loop);
+  })();
+})();
+
+/* ---------- effets + secrets ---------- */
+(function(){
+  const cv = document.getElementById("fx"), c = cv.getContext("2d"); let P = [], run = false;
+  const fit = () => { cv.width = innerWidth; cv.height = innerHeight; }; addEventListener("resize", fit); fit();
+  function burst(x, y, n = 90, hue){
+    for(let i=0;i<n;i++){ const a = Math.random()*6.283, s = 2+Math.random()*9;
+      P.push({x, y, vx:Math.cos(a)*s, vy:Math.sin(a)*s-3, life:1, h:hue ?? Math.random()*360, r:2+Math.random()*4}); }
+    if(!run){ run = true; requestAnimationFrame(step); }
+  }
+  function step(){
+    c.clearRect(0,0,cv.width,cv.height); P = P.filter(p => p.life > 0);
+    for(const p of P){ p.vy += .22; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.life -= .012;
+      c.globalAlpha = Math.max(p.life,0); c.fillStyle = `hsl(${p.h},95%,65%)`; c.beginPath(); c.arc(p.x,p.y,p.r,0,6.283); c.fill(); }
+    if(P.length) requestAnimationFrame(step); else { run = false; c.clearRect(0,0,cv.width,cv.height); }
+  }
+  const toast = document.getElementById("toast"); let tt;
+  const say = m => { toast.textContent = m; toast.classList.add("on"); clearTimeout(tt); tt = setTimeout(() => toast.classList.remove("on"), 4200); };
+  const boost = () => window.glBoost && glBoost();
+  const mid = el => { const b = el.getBoundingClientRect(); return [b.left+b.width/2, b.top+b.height/2]; };
+
+  // 1. code Konami
+  const K = "ArrowUp,ArrowUp,ArrowDown,ArrowDown,ArrowLeft,ArrowRight,ArrowLeft,ArrowRight,b,a".split(","); let ki = 0;
+  // 2. mot tapé au clavier
+  let typed = "";
+  addEventListener("keydown", e => {
+    ki = (e.key === K[ki] || e.key.toLowerCase() === K[ki]) ? ki+1 : (e.key === K[0] ? 1 : 0);
+    if(ki === K.length){ ki = 0; document.body.classList.add("rainbow"); boost();
+      for(let i=0;i<6;i++) setTimeout(() => burst(Math.random()*innerWidth, innerHeight*.35, 70), i*260);
+      say("Mode arc-en-ciel activé"); setTimeout(() => document.body.classList.remove("rainbow"), 9000); }
+    if(e.key.length === 1){ typed = (typed + e.key.toLowerCase()).slice(-5);
+      if(typed === "thors"){ typed = ""; boost(); say("Tu n'as le droit de blesser personne en ce monde."); } }
+  });
+
+  // 3. avatar x7, pastille x3, pseudo maintenu
+  let ac = 0, at, dc = 0, dt, st = 0, hold;
+  const modes = ["online","idle","dnd","offline"];
+  card.addEventListener("click", e => {
+    const dot = e.target.closest(".dot"), av = e.target.closest(".avatar");
+    if(dot){ clearTimeout(dt); dt = setTimeout(() => dc = 0, 1500);
+      if(++dc >= 3){ dc = 0; st = (st+1) % 4; const m = STATUS[modes[st]], R = document.documentElement.style;
+        R.setProperty("--st", m.c); R.setProperty("--a1", m.tint[0]); R.setProperty("--a2", m.tint[1]); R.setProperty("--a3", m.tint[2]);
+        window.glTarget && glTarget.set(m.c); say("Humeur : " + m.label); setTimeout(() => data && render(), 5000); }
+      return; }
+    if(av){ clearTimeout(at); at = setTimeout(() => ac = 0, 4000);
+      if(++ac >= 7){ ac = 0; av.classList.remove("flip"); void av.offsetWidth; av.classList.add("flip"); boost();
+        const [x,y] = mid(av); burst(x, y, 140); setTimeout(() => av.classList.remove("flip"), 1400); } }
+  });
+  card.addEventListener("pointerdown", e => {
+    if(!e.target.closest("h1")) return;
+    hold = setTimeout(() => { const [x,y] = mid(e.target.closest("h1")); let n = 0;
+      const iv = setInterval(() => { burst(x + (Math.random()-.5)*120, y, 22, 20 + Math.random()*35); if(++n > 14) clearInterval(iv); }, 90);
+      say("🔥"); }, 1500);
+  });
+  ["pointerup","pointerleave","pointercancel"].forEach(ev => card.addEventListener(ev, () => clearTimeout(hold)));
+
+  // 4. message dans la console
+  console.log("%cTu cherches quelque chose ?", "font:700 18px Georgia;color:#c084fc");
+  console.log("%cIl y a 5 secrets sur cette page. Le clavier, l'avatar, la pastille et le pseudo savent des choses.", "color:#a9a4c4");
 })();
 </script>
 </body>
