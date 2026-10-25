@@ -192,7 +192,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + 92px)}
 .music button:focus-visible{outline:2px solid var(--a3);outline-offset:2px}
 .music button.sm{width:32px;height:32px;background:rgba(255,255,255,.08)}
 .music svg{width:18px;height:18px;fill:currentColor}
-.music .mt{min-width:0;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.music .mt{min-width:0;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}
 .music .eq{margin:0}.music .eq s{background:var(--st)}
 .music:not(.on) .eq s{animation-play-state:paused;height:3px}
 .music .ic-pause,.music.on .ic-play{display:none}.music.on .ic-pause{display:block}
@@ -609,10 +609,17 @@ window.onYouTubeIframeAPIReady = () => {
         $("#music").classList.toggle("on", on);
         if(on || e.data === 2){ const t = yt.getVideoData().title; if(t) $("#mtitle").textContent = t; }
       },
-      onError: () => { $("#mtitle").textContent = "Playlist indisponible"; $("#mp").disabled = true; $("#mn").disabled = true; }
+      onError: e => {
+        const m = {2:"ID de playlist invalide", 5:"Erreur du lecteur", 100:"Playlist introuvable ou privée",
+                   101:"Lecture bloquée par le propriétaire", 150:"Lecture bloquée par le propriétaire",
+                   153:"Ouvre le site depuis une adresse web, pas un fichier"};
+        const t = (m[e.data] || "Playlist indisponible") + " (code " + e.data + ")";
+        $("#mtitle").textContent = t; $("#mtitle").title = t; $("#mp").disabled = true; $("#mn").disabled = true;
+      }
     }
   });
 };
+setTimeout(() => { if($("#mp").disabled && $("#mtitle").textContent === "Musique") $("#mtitle").textContent = "Lecteur YouTube non chargé (réseau ou bloqueur)"; }, 7000);
 $("#mp").onclick = () => yt && (yt.getPlayerState() === 1 ? yt.pauseVideo() : yt.playVideo());
 $("#mn").onclick = () => yt && yt.nextVideo();
 const ytTag = document.createElement("script"); ytTag.src = "https://www.youtube.com/iframe_api"; document.head.appendChild(ytTag);
